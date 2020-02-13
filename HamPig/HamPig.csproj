@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{E5E5D204-1A63-49A8-B192-5CAEC6F6EEBD}</ProjectGuid>
+    <ProjectGuid>{D80A491B-EAFD-4C0D-BC3F-193CF728F5C2}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>SocketServer</RootNamespace>
-    <AssemblyName>SocketServer</AssemblyName>
+    <RootNamespace>HamPig</RootNamespace>
+    <AssemblyName>HamPig</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -43,17 +43,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConsoleThread.cs" />
+    <Compile Include="Network\ClientSocket.cs" />
+    <Compile Include="Network\ServerSocket.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\HamPig\HamPig.csproj">
-      <Project>{d80a491b-eafd-4c0d-bc3f-193cf728f5c2}</Project>
-      <Name>HamPig</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

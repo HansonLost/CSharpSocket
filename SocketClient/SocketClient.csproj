@@ -49,5 +49,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HamPig\HamPig.csproj">
+      <Project>{d80a491b-eafd-4c0d-bc3f-193cf728f5c2}</Project>
+      <Name>HamPig</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
