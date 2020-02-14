@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net.Sockets;
 using HamPig;
 using HamPig.Network;
 
@@ -14,6 +15,10 @@ namespace SocketServer
         {
             ServerSocket serverSocket = new ServerSocket();
             serverSocket.Run();
+            serverSocket.onReceive.AddListener(delegate (Socket clientfd, byte[] byteData)
+            {
+                Console.WriteLine(String.Format("client : {1}", clientfd.ToString(), Encoding.Default.GetString(byteData)));
+            });
 
             ConsoleAsync console = new ConsoleAsync();
 
@@ -28,6 +33,8 @@ namespace SocketServer
                         isShutdown = true;
                     }
                 }
+
+                serverSocket.Tick();
             }
         }
     }

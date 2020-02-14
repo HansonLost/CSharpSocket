@@ -12,6 +12,8 @@ namespace HamPig.Network
         private byte[] m_ReadBuffer = new byte[1024];
         private Socket m_Socket;
         private List<byte[]> m_DataList = new List<byte[]>();
+        
+        public Listener<byte[]> onReceive { get; private set; }
 
         public ClientSocket()
         {

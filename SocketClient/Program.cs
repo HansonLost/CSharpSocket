@@ -12,30 +12,10 @@ namespace SocketClient
 {
     class Program
     {
-        //private static List<string> m_CmdList = new List<string>();
-        //private static int m_CmdCount;
-        //private static bool m_IsShutdown = false;
-
-        //static void IOMain()
-        //{
-        //    while (!m_IsShutdown)
-        //    {
-        //        string cmd = Console.ReadLine();
-        //        lock (m_CmdList)
-        //        {
-        //            m_CmdList.Add(cmd);
-        //            m_CmdCount++;
-        //        }
-        //    }
-        //}
-
         static void Main(string[] args)
         {
             Console.WriteLine("client is running...");
             ConsoleAsync console = new ConsoleAsync();
-            //ThreadStart ioStart = new ThreadStart(IOMain);
-            //Thread ioThread = new Thread(ioStart);
-            //ioThread.Start();
             ClientSocket mgr = new ClientSocket();
             bool isShutdown = false;
 
@@ -49,9 +29,12 @@ namespace SocketClient
                         Console.WriteLine("begin connect server.");
                         mgr.Connect("127.0.0.1", 8888);
                     }
-                    else if (cmd == "exit")
+                    else if (cmd == "close")
                     {
                         mgr.Close();
+                    }
+                    else if (cmd == "exit")
+                    {
                         isShutdown = true;
                     }
                     else if (cmd == "send")

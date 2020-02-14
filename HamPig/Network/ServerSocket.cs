@@ -16,23 +16,49 @@ namespace HamPig.Network
             public byte[] readBuffer;
         }
 
-        private Dictionary<Socket, ClientState> m_Clients = new Dictionary<Socket, ClientState>();
+        private class Data
+        {
+            public Socket clientfd;
+            public byte[] byteData;
+        }
 
+        private Dictionary<Socket, ClientState> m_Clients = new Dictionary<Socket, ClientState>();
         private Socket m_Listenfd;
+
+        private List<Data> m_DataList = new List<Data>();
+        private int m_DataCount = 0;
+
+        public Listener<Socket, byte[]> onReceive { get; private set; }
 
         public ServerSocket()
         {
+            onReceive = new Listener<Socket, byte[]>();
             m_Listenfd = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
 
         public void Run()
         {
+            Console.WriteLine("Server running...");
             IPAddress ip = IPAddress.Parse("127.0.0.1");
             IPEndPoint ipEp = new IPEndPoint(ip, 8888);
             m_Listenfd.Bind(ipEp);
             m_Listenfd.Listen(0);   // 不限制待连接数
-            Console.WriteLine("服务器开启...");
             m_Listenfd.BeginAccept(AcceptCallback, m_Listenfd);
+        }
+
+        public void Tick()
+        {
+            while (m_DataCount > 0)
+            {
+                Data msg = null;
+                lock (m_DataList)
+                {
+                    msg = m_DataList[0];
+                    m_DataList.RemoveAt(0);
+                    m_DataCount--;
+                }
+                onReceive.Invoke(msg.clientfd, msg.byteData);
+            }
         }
 
         private void AcceptCallback(IAsyncResult ar)
@@ -67,14 +93,22 @@ namespace HamPig.Network
                 if (count == 0)
                 {
                     // client 请求关闭 socket
-                    clientfd.Close();
                     Console.WriteLine("client close.");
+                    clientfd.Close();
                 }
                 else
                 {
-                    string str = Encoding.Default.GetString(state.readBuffer, 0, count);
-                    Console.WriteLine(string.Format("receive:{0}", str));
-                    clientfd.Send(Encoding.Default.GetBytes("Server Get."));
+                    lock (m_DataList)
+                    {
+                        byte[] byteData = new byte[count];
+                        Array.Copy(state.readBuffer, 0, byteData, 0, count);
+                        m_DataList.Add(new Data
+                        {
+                            clientfd = clientfd,
+                            byteData = byteData,
+                        });
+                        m_DataCount++;
+                    }
                     clientfd.BeginReceive(state.readBuffer, 0, 1024, 0, ReceiveCallback, state);
                 }
             }

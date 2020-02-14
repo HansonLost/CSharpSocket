@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConsoleAsync.cs" />
+    <Compile Include="Listener.cs" />
     <Compile Include="Network\ClientSocket.cs" />
     <Compile Include="Network\ServerSocket.cs" />
     <Compile Include="Program.cs" />
