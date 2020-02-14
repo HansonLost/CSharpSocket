@@ -12,11 +12,13 @@ namespace HamPig.Network
         private byte[] m_ReadBuffer = new byte[1024];
         private Socket m_Socket;
         private List<byte[]> m_DataList = new List<byte[]>();
+        private int m_DataCount = 0;
         
         public Listener<byte[]> onReceive { get; private set; }
 
         public ClientSocket()
         {
+            onReceive = new Listener<byte[]>();
             m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
 
@@ -25,7 +27,20 @@ namespace HamPig.Network
             m_Socket.BeginConnect(ip, port, ConnectCallback, m_Socket);
         }
 
-        public void Tick() { }
+        public void Tick()
+        {
+            while(m_DataCount > 0)
+            {
+                byte[] data = null;
+                lock (m_DataList)
+                {
+                    data = m_DataList[0];
+                    m_DataList.RemoveAt(0);
+                    m_DataCount--;
+                }
+                onReceive.Invoke(data);
+            }
+        }
 
         public void Send(byte[] data)
         {
@@ -35,22 +50,6 @@ namespace HamPig.Network
         public void Close()
         {
             m_Socket.Close();
-        }
-
-        public byte[] PopData()
-        {
-            if (m_DataList.Count <= 0)
-            {
-                return null;
-            }
-
-            byte[] data = null;
-            lock (m_DataList)
-            {
-                data = m_DataList[0];
-                m_DataList.RemoveAt(0);
-            }
-            return data;
         }
 
         private void ConnectCallback(IAsyncResult ar)

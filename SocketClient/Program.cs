@@ -19,6 +19,12 @@ namespace SocketClient
             ClientSocket mgr = new ClientSocket();
             bool isShutdown = false;
 
+            mgr.onReceive.AddListener(delegate (byte[] data)
+            {
+                string str = Encoding.Default.GetString(data);
+                Console.WriteLine(str);
+            });
+
             while(!isShutdown)
             {
                 string cmd = console.TryReadLine();
@@ -44,14 +50,9 @@ namespace SocketClient
                     }
                 }
 
-                byte[] data = mgr.PopData();
-                while (data != null)
-                {
-                    string str = Encoding.Default.GetString(data);
-                    Console.WriteLine(str);
-                    data = mgr.PopData();
-                }
+                mgr.Tick();
             }
         }
+
     }
 }
