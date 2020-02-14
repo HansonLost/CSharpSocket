@@ -7,33 +7,33 @@ using System.Threading.Tasks;
 
 namespace HamPig
 {
-    public class ConsoleThread
+    public class ConsoleAsync
     {
         public bool isRunning { get; private set; }
         private string m_Cmd;
         
-        public void Receive()
+        public string TryReadLine()
         {
-            if (isRunning)
+            string res = null;
+            if(isRunning)
             {
-                return;
+                res = m_Cmd;
+                m_Cmd = null;
             }
-            isRunning = true;
-
-            ThreadStart ts = new ThreadStart(Main);
-            Thread thread = new Thread(ts);
-            thread.Start();
+            else
+            {
+                isRunning = true;
+                ThreadStart ts = new ThreadStart(Main);
+                Thread thread = new Thread(ts);
+                thread.Start();
+            }
+            return res;
         }
 
         private void Main()
         {
             m_Cmd = System.Console.ReadLine();
             isRunning = false;
-        }
-
-        public string GetCommand()
-        {
-            return m_Cmd;
         }
     }
 }

@@ -15,13 +15,12 @@ namespace SocketServer
             ServerSocket serverSocket = new ServerSocket();
             serverSocket.Run();
 
-            ConsoleThread ioThread = new ConsoleThread();
+            ConsoleAsync console = new ConsoleAsync();
 
             bool isShutdown = false;
             while (!isShutdown)
             {
-                ioThread.Receive();
-                string cmd = ioThread.GetCommand();
+                string cmd = console.TryReadLine();
                 if(cmd != null)
                 {
                     if(cmd == "exit")
