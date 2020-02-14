@@ -5,51 +5,46 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Threading;
+using HamPig;
 using HamPig.Network;
 
 namespace SocketClient
 {
     class Program
     {
-        private static List<string> m_CmdList = new List<string>();
-        private static int m_CmdCount;
-        private static bool m_IsShutdown = false;
+        //private static List<string> m_CmdList = new List<string>();
+        //private static int m_CmdCount;
+        //private static bool m_IsShutdown = false;
 
-        static void IOMain()
-        {
-            while (!m_IsShutdown)
-            {
-                string cmd = Console.ReadLine();
-                lock (m_CmdList)
-                {
-                    m_CmdList.Add(cmd);
-                    m_CmdCount++;
-                }
-            }
-        }
+        //static void IOMain()
+        //{
+        //    while (!m_IsShutdown)
+        //    {
+        //        string cmd = Console.ReadLine();
+        //        lock (m_CmdList)
+        //        {
+        //            m_CmdList.Add(cmd);
+        //            m_CmdCount++;
+        //        }
+        //    }
+        //}
 
         static void Main(string[] args)
         {
-            ThreadStart ioStart = new ThreadStart(IOMain);
-            Thread ioThread = new Thread(ioStart);
-            ioThread.Start();
             Console.WriteLine("client is running...");
-
+            ConsoleAsync console = new ConsoleAsync();
+            //ThreadStart ioStart = new ThreadStart(IOMain);
+            //Thread ioThread = new Thread(ioStart);
+            //ioThread.Start();
             ClientSocket mgr = new ClientSocket();
+            bool isShutdown = false;
 
-            while(!m_IsShutdown)
+            while(!isShutdown)
             {
-                while(m_CmdCount > 0)
+                string cmd = console.TryReadLine();
+                if(cmd != null)
                 {
-                    string cmd = null;
-                    lock (m_CmdList)
-                    {
-                        cmd = m_CmdList[0];
-                        m_CmdList.RemoveAt(0);
-                        m_CmdCount--;
-                    }
-
-                    if(cmd == "connect")
+                    if (cmd == "connect")
                     {
                         Console.WriteLine("begin connect server.");
                         mgr.Connect("127.0.0.1", 8888);
@@ -57,7 +52,7 @@ namespace SocketClient
                     else if (cmd == "exit")
                     {
                         mgr.Close();
-                        m_IsShutdown = true;
+                        isShutdown = true;
                     }
                     else if (cmd == "send")
                     {

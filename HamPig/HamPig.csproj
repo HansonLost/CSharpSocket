@@ -43,7 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConsoleThread.cs" />
+    <Compile Include="ConsoleAsync.cs" />
     <Compile Include="Network\ClientSocket.cs" />
     <Compile Include="Network\ServerSocket.cs" />
     <Compile Include="Program.cs" />
