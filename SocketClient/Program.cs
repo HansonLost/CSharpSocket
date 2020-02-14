@@ -45,8 +45,9 @@ namespace SocketClient
                     }
                     else if (cmd == "send")
                     {
-                        string str = "say hello.";
-                        mgr.Send(Encoding.Default.GetBytes(str));
+                        mgr.Send(Encoding.Default.GetBytes("hi."));
+                        mgr.Send(Encoding.Default.GetBytes("how old are you."));
+                        mgr.Send(Encoding.Default.GetBytes("see you."));
                     }
                 }
 

@@ -8,12 +8,56 @@ using System.Net.Sockets;
 
 namespace HamPig.Network
 {
+    public class SocketReadBuffer
+    {
+        public byte[] buffer { get; private set; }
+        public Int32 offset { get; private set; }
+        public Int32 size { get; private set; }
+        public Int32 capacity { get { return buffer.Length; } }
+
+        public SocketReadBuffer(Int32 capacity = 1024)
+        {
+            buffer = new byte[capacity];
+            offset = 0;
+            size = 0;
+        }
+
+        /// <summary>
+        /// 记录新存放的数据。该接口不会检验 count 的合法性。
+        /// </summary>
+        public void Receive(Int32 count)
+        {
+            size += count;
+        }
+
+        public byte[] GetData()
+        {
+            if (size <= 2) return null; // buffer 中没有实际 data
+            Int16 len = BitConverter.ToInt16(buffer, offset);
+            if (size < 2 + len) return null;    // buffer 中没有完整的 data
+            byte[] data = new byte[len];
+            Array.Copy(buffer, offset + 2, data, 0, len);
+            offset += 2 + len;
+            size -= 2 + len;
+            return data;
+        }
+
+        /// <summary>
+        /// 整理 buffer 空间
+        /// </summary>
+        public void Refresh()
+        {
+            Array.Copy(buffer, offset, buffer, 0, size);
+            offset = 0;
+        }
+    }
+
     public class ServerSocket
     {
         private class ClientState
         {
             public Socket socket;
-            public byte[] readBuffer;
+            public SocketReadBuffer readBuffer;
         }
 
         private class Data
@@ -61,6 +105,14 @@ namespace HamPig.Network
             }
         }
 
+        public void Send(Socket cfd, byte[] data)
+        {
+            Int16 len = (Int16)data.Length;
+            byte[] lenBytes = BitConverter.GetBytes(len);
+            byte[] sendBytes = lenBytes.Concat(data).ToArray();
+            cfd.BeginSend(sendBytes, 0, sendBytes.Length, 0, SendCallback, cfd);
+        }
+
         private void AcceptCallback(IAsyncResult ar)
         {
             try
@@ -71,10 +123,10 @@ namespace HamPig.Network
                 ClientState state = new ClientState
                 {
                     socket = clientfd,
-                    readBuffer = new byte[1024],
+                    readBuffer = new SocketReadBuffer(),
                 };
                 m_Clients.Add(clientfd, state);
-                clientfd.BeginReceive(state.readBuffer, 0, 1024, 0, ReceiveCallback, state);
+                clientfd.BeginReceive(state.readBuffer.buffer, 0, state.readBuffer.capacity, 0, ReceiveCallback, state);
                 listenfd.BeginAccept(AcceptCallback, listenfd);
             }
             catch (SocketException ex)
@@ -98,19 +150,39 @@ namespace HamPig.Network
                 }
                 else
                 {
-                    lock (m_DataList)
+                    state.readBuffer.Receive(count);
+                    byte[] byteData = state.readBuffer.GetData();
+                    while(byteData != null)
                     {
-                        byte[] byteData = new byte[count];
-                        Array.Copy(state.readBuffer, 0, byteData, 0, count);
-                        m_DataList.Add(new Data
+                        lock (m_DataList)
                         {
-                            clientfd = clientfd,
-                            byteData = byteData,
-                        });
-                        m_DataCount++;
+                            m_DataList.Add(new Data
+                            {
+                                clientfd = clientfd,
+                                byteData = byteData,
+                            });
+                            m_DataCount++;
+                        }
+                        byteData = state.readBuffer.GetData();
                     }
-                    clientfd.BeginReceive(state.readBuffer, 0, 1024, 0, ReceiveCallback, state);
+                    state.readBuffer.Refresh();
+                    int offset = state.readBuffer.offset + state.readBuffer.size;
+                    int size = state.readBuffer.capacity - offset;
+                    clientfd.BeginReceive(state.readBuffer.buffer, offset, size, 0, ReceiveCallback, state);
                 }
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+
+        private void SendCallback(IAsyncResult ar)
+        {
+            try
+            {
+                Socket socket = (Socket)ar.AsyncState;
+                int count = socket.EndSend(ar); // 只是把数据成功放到 send buffer。
             }
             catch (SocketException ex)
             {
