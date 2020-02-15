@@ -64,7 +64,7 @@ namespace HamPig.Network
         public void Send(Socket cfd, byte[] data)
         {
             Int16 len = (Int16)data.Length;
-            byte[] lenBytes = BitConverter.GetBytes(len);
+            byte[] lenBytes = LittleEndianByte.GetBytes(len);/* BitConverter.GetBytes(len);*/
             byte[] sendBytes = lenBytes.Concat(data).ToArray();
             cfd.BeginSend(sendBytes, 0, sendBytes.Length, 0, SendCallback, cfd);
         }

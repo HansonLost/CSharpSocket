@@ -46,7 +46,7 @@ namespace HamPig.Network
         public void Send(byte[] data)
         {
             Int16 len = (Int16)data.Length;
-            byte[] lenBytes = BitConverter.GetBytes(len);
+            byte[] lenBytes = LittleEndianByte.GetBytes(len);/* BitConverter.GetBytes(len);*/
             byte[] sendBytes = lenBytes.Concat(data).ToArray();
             m_Socket.BeginSend(sendBytes, 0, sendBytes.Length, 0, SendCallback, m_Socket);
         }
