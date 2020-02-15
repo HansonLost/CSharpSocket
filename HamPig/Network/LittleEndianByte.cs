@@ -16,7 +16,7 @@ namespace HamPig.Network
             byte[] res = BitConverter.GetBytes(value);
             if (!BitConverter.IsLittleEndian)
             {
-                res.Reverse();
+                Array.Reverse(res);
             }
             return res;
 
