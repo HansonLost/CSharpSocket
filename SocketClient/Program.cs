@@ -12,6 +12,8 @@ namespace SocketClient
 {
     class Program
     {
+        static int count = 0;
+
         static void Main(string[] args)
         {
             Console.WriteLine("client is running...");
@@ -45,9 +47,15 @@ namespace SocketClient
                     }
                     else if (cmd == "send")
                     {
-                        mgr.Send(Encoding.Default.GetBytes("hi."));
-                        mgr.Send(Encoding.Default.GetBytes("how old are you."));
-                        mgr.Send(Encoding.Default.GetBytes("see you."));
+                        count++;
+                        string str = String.Format("{0}-hi.", count);
+                        mgr.Send(Encoding.Default.GetBytes(str));
+                        //mgr.Send(Encoding.Default.GetBytes("how old are you."));
+                        //mgr.Send(Encoding.Default.GetBytes("see you."));
+                    }
+                    else
+                    {
+                        Console.WriteLine("未识别指令");
                     }
                 }
 

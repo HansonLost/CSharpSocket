@@ -6,6 +6,24 @@ using System.Threading.Tasks;
 
 namespace HamPig
 {
+    public class Listener
+    {
+        public delegate void Callback();
+        private Callback m_Callback;
+        public void AddListener(Callback func)
+        {
+            m_Callback += func;
+        }
+        public void RemoveListener(Callback func)
+        {
+            m_Callback -= func;
+        }
+        public void Invoke()
+        {
+            m_Callback.Invoke();
+        }
+    }
+
     public class Listener<T0>
     {
         public delegate void Callback(T0 t0);

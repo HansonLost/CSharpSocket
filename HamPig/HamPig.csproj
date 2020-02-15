@@ -47,6 +47,7 @@
     <Compile Include="Listener.cs" />
     <Compile Include="Network\ClientSocket.cs" />
     <Compile Include="Network\ServerSocket.cs" />
+    <Compile Include="Network\SocketReadBuffer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
