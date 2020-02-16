@@ -21,8 +21,9 @@ namespace HamPig.Network
     public sealed class ClientSocket
     {
         private SocketReadBuffer m_ReadBuffer;
-        private SocketSendBuffer m_WriteBuffer;
+        private SocketWriteBuffer m_WriteBuffer;
         private Socket m_Socket;
+
         private List<byte[]> m_DataList = new List<byte[]>();
         private int m_DataCount = 0;
         
@@ -31,7 +32,7 @@ namespace HamPig.Network
         public ClientSocket()
         {
             m_ReadBuffer = new SocketReadBuffer();
-            m_WriteBuffer = new SocketSendBuffer();
+            m_WriteBuffer = new SocketWriteBuffer();
             onReceive = new Listener<byte[]>();
             m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
@@ -95,21 +96,18 @@ namespace HamPig.Network
                 Socket socket = (Socket)ar.AsyncState;
                 int count = socket.EndReceive(ar);
                 m_ReadBuffer.Update(count);
-                //m_ReadBuffer.Receive(count);
-                //byte[] data = m_ReadBuffer.GetData();
-                //while (data != null)
-                //{
-                //    lock (m_DataList)
-                //    {
-                //        m_DataList.Add(data);
-                //        m_DataCount++;
-                //    }
-                //    data = m_ReadBuffer.GetData();
-                //}
-                //m_ReadBuffer.Refresh();
-                //int offset = m_ReadBuffer.offset + m_ReadBuffer.size;
-                //int size = m_ReadBuffer.capacity - offset;
-                //socket.BeginReceive(m_ReadBuffer.buffer, offset, size, 0, ReceiveCallback, socket);
+
+                ByteArray data = m_ReadBuffer.GetData();
+                while(data != null)
+                {
+                    lock (m_DataList)
+                    {
+                        m_DataList.Add(data.ToBytes());
+                        m_DataCount++;
+                    }
+                    data = m_ReadBuffer.GetData();
+                }
+
                 socket.BeginReceive(m_ReadBuffer, ReceiveCallback, socket);
             }
             catch (SocketException ex)

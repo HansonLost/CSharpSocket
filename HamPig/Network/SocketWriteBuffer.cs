@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace HamPig.Network
 {
-    public class SocketSendBuffer
+    public class SocketWriteBuffer
     {
         private Queue<byte[]> m_DataQueue;
         public Int32 offset { get; private set; }
         public Int32 size { get; private set; }
 
 
-        public SocketSendBuffer()
+        public SocketWriteBuffer()
         {
             m_DataQueue = new Queue<byte[]>();
         }

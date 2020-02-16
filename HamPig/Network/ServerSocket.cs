@@ -82,7 +82,6 @@ namespace HamPig.Network
                     readBuffer = new SocketReadBuffer(),
                 };
                 m_Clients.Add(clientfd, state);
-                //clientfd.BeginReceive(state.readBuffer.buffer, 0, state.readBuffer.capacity, 0, ReceiveCallback, state);
                 clientfd.BeginReceive(state.readBuffer, ReceiveCallback, state);
                 listenfd.BeginAccept(AcceptCallback, listenfd);
             }
@@ -108,25 +107,23 @@ namespace HamPig.Network
                 else
                 {
                     state.readBuffer.Update(count);
-                    //state.readBuffer.Receive(count);
-                    //byte[] byteData = state.readBuffer.GetData();
-                    //while(byteData != null)
-                    //{
-                    //    lock (m_DataList)
-                    //    {
-                    //        m_DataList.Add(new Data
-                    //        {
-                    //            clientfd = clientfd,
-                    //            byteData = byteData,
-                    //        });
-                    //        m_DataCount++;
-                    //    }
-                    //    byteData = state.readBuffer.GetData();
-                    //}
-                    //state.readBuffer.Refresh();
-                    //int offset = state.readBuffer.offset + state.readBuffer.size;
-                    //int size = state.readBuffer.capacity - offset;
-                    //clientfd.BeginReceive(state.readBuffer.buffer, offset, size, 0, ReceiveCallback, state);
+
+                    ByteArray data = state.readBuffer.GetData();
+                    while (data != null)
+                    {
+                        lock (m_DataList)
+                        {
+                            
+                            m_DataList.Add(new Data
+                            {
+                                clientfd = clientfd,
+                                byteData = data.ToBytes(),
+                            });
+                            m_DataCount++;
+                        }
+                        data = state.readBuffer.GetData();
+                    }
+
                     clientfd.BeginReceive(state.readBuffer, ReceiveCallback, state);
                 }
             }
