@@ -10,6 +10,7 @@ namespace HamPig.Network
     public class ClientSocket
     {
         private SocketReadBuffer m_ReadBuffer;
+        private SocketSendBuffer m_WriteBuffer;
         private Socket m_Socket;
         private List<byte[]> m_DataList = new List<byte[]>();
         private int m_DataCount = 0;
@@ -19,6 +20,7 @@ namespace HamPig.Network
         public ClientSocket()
         {
             m_ReadBuffer = new SocketReadBuffer();
+            m_WriteBuffer = new SocketSendBuffer();
             onReceive = new Listener<byte[]>();
             m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
@@ -45,10 +47,13 @@ namespace HamPig.Network
 
         public void Send(byte[] data)
         {
-            Int16 len = (Int16)data.Length;
-            byte[] lenBytes = LittleEndianByte.GetBytes(len);/* BitConverter.GetBytes(len);*/
-            byte[] sendBytes = lenBytes.Concat(data).ToArray();
-            m_Socket.BeginSend(sendBytes, 0, sendBytes.Length, 0, SendCallback, m_Socket);
+            byte[] sendBytes = m_WriteBuffer.Add(data);
+            if(sendBytes != null)
+            {
+                int offset = m_WriteBuffer.offset;
+                int size = m_WriteBuffer.size;
+                m_Socket.BeginSend(sendBytes, offset, size, 0, SendCallback, m_Socket);
+            }
         }
 
         public void Close()
@@ -106,6 +111,14 @@ namespace HamPig.Network
             {
                 Socket socket = (Socket)ar.AsyncState;
                 int count = socket.EndSend(ar); // 只是把数据成功放到 send buffer。
+                Console.WriteLine(String.Format("count={0}", count));
+                byte[] sendBytes = m_WriteBuffer.Update(count);
+                if(sendBytes != null)
+                {
+                    int offset = m_WriteBuffer.offset;
+                    int size = m_WriteBuffer.size;
+                    socket.BeginSend(sendBytes, offset, size, 0, SendCallback, socket);
+                }
             }
             catch (SocketException ex)
             {

@@ -19,7 +19,6 @@ namespace HamPig.Network
                 Array.Reverse(res);
             }
             return res;
-
         }
 
         public static Int16 GetInt16(byte[] value, int startIndex)

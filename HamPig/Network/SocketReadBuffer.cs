@@ -31,7 +31,7 @@ namespace HamPig.Network
         public byte[] GetData()
         {
             if (size <= 2) return null; // buffer 中没有实际 data
-            Int16 len = LittleEndianByte.GetInt16(buffer, offset);/* BitConverter.ToInt16(buffer, offset);*/
+            Int16 len = LittleEndianByte.GetInt16(buffer, offset);
             if (size < 2 + len) return null;    // buffer 中没有完整的 data
             byte[] data = new byte[len];
             Array.Copy(buffer, offset + 2, data, 0, len);

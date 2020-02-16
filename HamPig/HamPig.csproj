@@ -49,6 +49,7 @@
     <Compile Include="Network\LittleEndianByte.cs" />
     <Compile Include="Network\ServerSocket.cs" />
     <Compile Include="Network\SocketReadBuffer.cs" />
+    <Compile Include="Network\SocketSendBuffer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
