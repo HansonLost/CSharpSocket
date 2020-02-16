@@ -29,6 +29,10 @@ namespace HamPig.Network
         {
             return GetInt16(value, 0);
         }
-        
+        public static Int16 GetInt16(ByteArray value)
+        {
+            return GetInt16(value.buffer, value.offset);
+        }
+
     }
 }
