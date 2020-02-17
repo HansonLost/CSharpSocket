@@ -63,7 +63,10 @@ namespace HamPig.Network
 
         public ByteArray GetData()
         {
-            return (m_DataQueue.Count > 0 ? m_DataQueue.Dequeue() : null);
+            lock (m_DataQueue)
+            {
+                return (m_DataQueue.Count > 0 ? m_DataQueue.Dequeue() : null);
+            }
         }
     }
 }
