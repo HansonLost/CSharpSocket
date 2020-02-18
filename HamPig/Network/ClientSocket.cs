@@ -9,12 +9,11 @@ namespace HamPig.Network
 {
     public static partial class SocketExtension
     {
-        public static IAsyncResult BeginReceive(this Socket socket, SocketReadBuffer buffer, AsyncCallback callback, object state)
+        public static IAsyncResult BeginReceive(this Socket socket, ByteArray bytes, AsyncCallback callback, object state)
         {
-            ByteArray byteArray = buffer.recvBuffer;
-            Int32 offset = byteArray.offset + byteArray.size;
-            Int32 size = byteArray.GetFreeLength();
-            return socket.BeginReceive(byteArray.buffer, offset, size, 0, callback, state);
+            Int32 offset = bytes.offset + bytes.size;
+            Int32 size = bytes.GetFreeLength();
+            return socket.BeginReceive(bytes.buffer, offset, size, 0, callback, state);
         }
 
         public static IAsyncResult BeginSend(this Socket socket, ByteArray bytes, AsyncCallback callback, object state)
@@ -66,14 +65,6 @@ namespace HamPig.Network
             {
                 m_Socket.BeginSend(sendBytes, SendCallback, m_Socket);
             }
-
-            //byte[] sendBytes = m_WriteBuffer.Add(data);
-            //if(sendBytes != null)
-            //{
-            //    int offset = m_WriteBuffer.offset;
-            //    int size = m_WriteBuffer.size;
-            //    m_Socket.BeginSend(sendBytes, offset, size, 0, SendCallback, m_Socket);
-            //}
         }
 
         public void Close()
@@ -88,7 +79,7 @@ namespace HamPig.Network
                 Socket socket = (Socket)ar.AsyncState;
                 socket.EndConnect(ar);
                 Console.WriteLine("connect successfully.");
-                socket.BeginReceive(m_ReadBuffer, ReceiveCallback, socket);
+                socket.BeginReceive(m_ReadBuffer.recvBuffer, ReceiveCallback, socket);
             }
             catch (SocketException ex)
             {
@@ -104,7 +95,7 @@ namespace HamPig.Network
                 if (socket != null && !socket.Connected) return; // close 之后会中止 recv 线程，有可能会调用该 callback。
                 int count = socket.EndReceive(ar);
                 m_ReadBuffer.Update(count);
-                socket.BeginReceive(m_ReadBuffer, ReceiveCallback, socket);
+                socket.BeginReceive(m_ReadBuffer.recvBuffer, ReceiveCallback, socket);
             }
             catch (SocketException ex)
             {
@@ -118,13 +109,6 @@ namespace HamPig.Network
             {
                 Socket socket = (Socket)ar.AsyncState;
                 int count = socket.EndSend(ar); // 只是把数据成功放到 send buffer。
-                //byte[] sendBytes = m_WriteBuffer.Update(count);
-                //if(sendBytes != null)
-                //{
-                //    int offset = m_WriteBuffer.offset;
-                //    int size = m_WriteBuffer.size;
-                //    socket.BeginSend(sendBytes, offset, size, 0, SendCallback, socket);
-                //}
                 var sendBytes = m_WriteBuffer.Update(count);
                 if(sendBytes != null)
                 {

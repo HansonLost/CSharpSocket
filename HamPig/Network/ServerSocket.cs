@@ -84,7 +84,7 @@ namespace HamPig.Network
                     readBuffer = new SocketReadBuffer(),
                 };
                 m_Clients.Add(clientfd, state);
-                clientfd.BeginReceive(state.readBuffer, ReceiveCallback, state);
+                clientfd.BeginReceive(state.readBuffer.recvBuffer, ReceiveCallback, state);
                 listenfd.BeginAccept(AcceptCallback, listenfd);
             }
             catch (SocketException ex)
@@ -126,7 +126,7 @@ namespace HamPig.Network
                         data = state.readBuffer.GetData();
                     }
 
-                    clientfd.BeginReceive(state.readBuffer, ReceiveCallback, state);
+                    clientfd.BeginReceive(state.readBuffer.recvBuffer, ReceiveCallback, state);
                 }
             }
             catch (SocketException ex)
