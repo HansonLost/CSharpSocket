@@ -31,7 +31,12 @@ namespace HamPig.Network
             m_ReadBuffer = new SocketReadBuffer();
             m_WriteBuffer = new SocketWriteBuffer();
             onReceive = new Listener<byte[]>();
-            m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+            {
+                // 2个 bufferSize 都用默认的
+                NoDelay = true, // 为了游戏的实时性，关闭延时发送。
+                // TTL 先不调
+            };
         }
 
         public void Connect(string ip, int port)
@@ -62,6 +67,7 @@ namespace HamPig.Network
 
         public void Close()
         {
+            m_Socket.BeginDisconnect(false, DisconnectCallback, m_Socket);
             m_Socket.Close();
         }
 
@@ -85,6 +91,7 @@ namespace HamPig.Network
             try
             {
                 Socket socket = (Socket)ar.AsyncState;
+                if (socket != null && !socket.Connected) return; // close 之后会中止 recv 线程，有可能会调用该 callback。
                 int count = socket.EndReceive(ar);
                 m_ReadBuffer.Update(count);
                 socket.BeginReceive(m_ReadBuffer, ReceiveCallback, socket);
@@ -113,6 +120,12 @@ namespace HamPig.Network
             {
                 Console.WriteLine(ex.ToString());
             }
+        }
+
+        private void DisconnectCallback(IAsyncResult ar)
+        {
+            Socket socket = (Socket)ar.AsyncState;
+            socket.Close();
         }
     }
 }

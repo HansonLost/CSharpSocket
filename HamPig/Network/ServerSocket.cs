@@ -34,6 +34,8 @@ namespace HamPig.Network
         {
             onReceive = new Listener<Socket, byte[]>();
             m_Listenfd = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            //m_Listenfd.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true); 先不弄端口复用
         }
 
         public void Run()
