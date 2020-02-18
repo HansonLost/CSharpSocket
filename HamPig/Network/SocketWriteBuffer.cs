@@ -8,68 +8,49 @@ namespace HamPig.Network
 {
     public class SocketWriteBuffer
     {
-        private Queue<byte[]> m_DataQueue;
-        public Int32 offset { get; private set; }
-        public Int32 size { get; private set; }
-
-
+        private Queue<ByteArray> m_ExDataQueue;
         public SocketWriteBuffer()
         {
-            m_DataQueue = new Queue<byte[]>();
+            m_ExDataQueue = new Queue<ByteArray>();
         }
 
-        // 主线程调用
-        public byte[] Add(byte[] data)
+        // 若放入数据前队列是空时，会返回打包后的数据
+        public ByteArray Add(byte[] data)
         {
             Int16 len = (Int16)data.Length;
             byte[] lenBytes = LittleEndianByte.GetBytes(len);
             byte[] sendBytes = lenBytes.Concat(data).ToArray();
 
-            byte[] buffer = null;
-            lock (m_DataQueue)
+            ByteArray res = null;
+            lock (m_ExDataQueue)
             {
-                m_DataQueue.Enqueue(sendBytes);
-                if(m_DataQueue.Count == 1)
+                m_ExDataQueue.Enqueue(new ByteArray(sendBytes));
+                if (m_ExDataQueue.Count == 1)
                 {
-                    buffer = m_DataQueue.First();
+                    res = m_ExDataQueue.First();
                 }
             }
-            if(buffer != null)
-            {
-                offset = 0;
-                size = buffer.Length;
-            }
-            return buffer;
+            return res;
         }
 
-        // socket 线程调用
-        public byte[] Update(Int32 count)
+        public ByteArray Update(Int32 count)
         {
-            byte[] buffer = null;
-            lock (m_DataQueue)
+            ByteArray sendingData = null;
+            lock (m_ExDataQueue)
             {
-                buffer = m_DataQueue.First();
+                sendingData = m_ExDataQueue.First();
             }
-            offset += count;
-            size -= count;
-
-            if(size <= 0)
+            sendingData.Remove(count);
+            if(sendingData.size <= 0)
             {
-                offset = 0;
-                size = 0;
-
-                lock (m_DataQueue)
+                // 已全放入 system send buffer
+                lock (m_ExDataQueue)
                 {
-                    m_DataQueue.Dequeue();
-                    buffer = (m_DataQueue.Count > 0 ? m_DataQueue.First() : null);
-                }
-                if(buffer != null)
-                {
-                    offset = 0;
-                    size = buffer.Length;
+                    m_ExDataQueue.Dequeue();
+                    sendingData = (m_ExDataQueue.Count > 0 ? m_ExDataQueue.First() : null);
                 }
             }
-            return buffer;
+            return sendingData;
         }
     }
 }

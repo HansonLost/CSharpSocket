@@ -12,6 +12,14 @@ namespace HamPig.Network
         public Int32 offset { get; private set; }
         public Int32 size { get; private set; }
 
+        public ByteArray(byte[] data)
+        {
+            buffer = new byte[data.Length];
+            Array.Copy(data, 0, buffer, 0, data.Length);
+            offset = 0;
+            size = data.Length;
+        }
+
         public ByteArray(Int32 capacity = 1024)
         {
             buffer = new byte[capacity];
