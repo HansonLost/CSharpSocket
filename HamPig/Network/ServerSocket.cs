@@ -65,6 +65,7 @@ namespace HamPig.Network
 
         public void Send(Socket cfd, byte[] data)
         {
+            if (!m_OnlineClients.ContainsKey(cfd)) return;
             Int16 len = (Int16)data.Length;
             byte[] lenBytes = LittleEndianByte.GetBytes(len);/* BitConverter.GetBytes(len);*/
             byte[] sendBytes = lenBytes.Concat(data).ToArray();
@@ -98,13 +99,14 @@ namespace HamPig.Network
             try
             {
                 ClientState state = (ClientState)ar.AsyncState;
-                Socket clientfd = state.socket;
-                int count = clientfd.EndReceive(ar);
+                Socket cfd = state.socket;
+                int count = cfd.EndReceive(ar);
                 if (count == 0)
                 {
                     // client 请求关闭 socket
                     Console.WriteLine("client close.");
-                    clientfd.Close();
+                    m_OnlineClients.Remove(cfd);
+                    cfd.Close();
                 }
                 else
                 {
@@ -118,7 +120,7 @@ namespace HamPig.Network
                             
                             m_DataList.Add(new Data
                             {
-                                clientfd = clientfd,
+                                clientfd = cfd,
                                 byteData = data.ToBytes(),
                             });
                             m_DataCount++;
@@ -126,7 +128,7 @@ namespace HamPig.Network
                         data = state.readBuffer.GetData();
                     }
 
-                    clientfd.BeginReceive(state.readBuffer.recvBuffer, ReceiveCallback, state);
+                    cfd.BeginReceive(state.readBuffer.recvBuffer, ReceiveCallback, state);
                 }
             }
             catch (SocketException ex)
