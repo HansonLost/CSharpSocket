@@ -8,10 +8,10 @@ namespace HamPig.Network
 {
     public class SocketWriteBuffer
     {
-        private Queue<ByteArray> m_ExDataQueue;
+        private Queue<ByteArray> m_DataQueue;
         public SocketWriteBuffer()
         {
-            m_ExDataQueue = new Queue<ByteArray>();
+            m_DataQueue = new Queue<ByteArray>();
         }
 
         // 若放入数据前队列是空时，会返回打包后的数据
@@ -22,12 +22,12 @@ namespace HamPig.Network
             byte[] sendBytes = lenBytes.Concat(data).ToArray();
 
             ByteArray res = null;
-            lock (m_ExDataQueue)
+            lock (m_DataQueue)
             {
-                m_ExDataQueue.Enqueue(new ByteArray(sendBytes));
-                if (m_ExDataQueue.Count == 1)
+                m_DataQueue.Enqueue(new ByteArray(sendBytes));
+                if (m_DataQueue.Count == 1)
                 {
-                    res = m_ExDataQueue.First();
+                    res = m_DataQueue.First();
                 }
             }
             return res;
@@ -36,21 +36,29 @@ namespace HamPig.Network
         public ByteArray Update(Int32 count)
         {
             ByteArray sendingData = null;
-            lock (m_ExDataQueue)
+            lock (m_DataQueue)
             {
-                sendingData = m_ExDataQueue.First();
+                sendingData = m_DataQueue.First();
             }
             sendingData.Remove(count);
             if(sendingData.size <= 0)
             {
                 // 已全放入 system send buffer
-                lock (m_ExDataQueue)
+                lock (m_DataQueue)
                 {
-                    m_ExDataQueue.Dequeue();
-                    sendingData = (m_ExDataQueue.Count > 0 ? m_ExDataQueue.First() : null);
+                    m_DataQueue.Dequeue();
+                    sendingData = (m_DataQueue.Count > 0 ? m_DataQueue.First() : null);
                 }
             }
             return sendingData;
+        }
+
+        public bool IsEmpty()
+        {
+            lock (m_DataQueue)
+            {
+                return (m_DataQueue.Count <= 0);
+            }
         }
     }
 }

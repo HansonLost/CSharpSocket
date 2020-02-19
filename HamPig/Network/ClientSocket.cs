@@ -24,11 +24,12 @@ namespace HamPig.Network
 
     public sealed class ClientSocket
     {
+        public Listener<byte[]> onReceive { get; private set; }
+
         private SocketReadBuffer m_ReadBuffer;
         private SocketWriteBuffer m_WriteBuffer;
         private Socket m_Socket;
-
-        public Listener<byte[]> onReceive { get; private set; }
+        private bool m_IsClosing;
 
         public ClientSocket()
         {
@@ -41,6 +42,7 @@ namespace HamPig.Network
                 NoDelay = true, // 为了游戏的实时性，关闭延时发送。
                 // TTL 先不调
             };
+            m_IsClosing = false;
         }
 
         public void Connect(string ip, int port)
@@ -69,7 +71,12 @@ namespace HamPig.Network
 
         public void Close()
         {
-            m_Socket.BeginDisconnect(false, DisconnectCallback, m_Socket);
+            m_IsClosing = true;
+            if (m_WriteBuffer.IsEmpty())
+            {
+                m_Socket.BeginDisconnect(false, DisconnectCallback, m_Socket);
+            }
+            Console.WriteLine("wait for close");
         }
 
         private void ConnectCallback(IAsyncResult ar)
@@ -110,9 +117,14 @@ namespace HamPig.Network
                 Socket socket = (Socket)ar.AsyncState;
                 int count = socket.EndSend(ar); // 只是把数据成功放到 send buffer。
                 var sendBytes = m_WriteBuffer.Update(count);
-                if(sendBytes != null)
+                if (sendBytes != null)
                 {
                     socket.BeginSend(sendBytes, SendCallback, socket);
+                }
+                else if (m_IsClosing)
+                {
+                    socket.BeginDisconnect(false, DisconnectCallback, socket);
+                    Console.WriteLine("begin close.");
                 }
             }
             catch (SocketException ex)
@@ -125,6 +137,7 @@ namespace HamPig.Network
         {
             Socket socket = (Socket)ar.AsyncState;
             socket.Close();
+            m_IsClosing = false;
         }
     }
 }

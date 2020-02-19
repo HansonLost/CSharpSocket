@@ -22,7 +22,7 @@ namespace HamPig.Network
             public byte[] byteData;
         }
 
-        private Dictionary<Socket, ClientState> m_Clients = new Dictionary<Socket, ClientState>();
+        private Dictionary<Socket, ClientState> m_OnlineClients = new Dictionary<Socket, ClientState>();
         private Socket m_Listenfd;
 
         private List<Data> m_DataList = new List<Data>();
@@ -83,7 +83,7 @@ namespace HamPig.Network
                     socket = clientfd,
                     readBuffer = new SocketReadBuffer(),
                 };
-                m_Clients.Add(clientfd, state);
+                m_OnlineClients.Add(clientfd, state);
                 clientfd.BeginReceive(state.readBuffer.recvBuffer, ReceiveCallback, state);
                 listenfd.BeginAccept(AcceptCallback, listenfd);
             }
