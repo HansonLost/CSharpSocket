@@ -1,0 +1,7 @@
+syntax = "proto3";
+package GameProto;
+
+message Login {
+	string account = 1;
+	string password = 2;
+}
