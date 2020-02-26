@@ -7,6 +7,8 @@ using System.Net.Sockets;
 using System.Threading;
 using HamPig;
 using HamPig.Network;
+using Google.Protobuf;
+using GameProto;
 
 namespace SocketClient
 {
@@ -17,46 +19,18 @@ namespace SocketClient
         LoginRes,
     }
 
-    public class LoginListener : Singleton<LoginListener>, NetManager.IProtocListener
+    
+
+    public sealed class LoginListener : NetManager.BaseListener<LoginListener, GameProto.Login>
     {
-        private Action<GameProto.Login> m_Action;
-
-        public LoginListener()
-        {
-            NetManager.Register((Int16)ProtocType.Login, this);
-        }
-
-        public void AddListener(Action<GameProto.Login> action)
-        {
-            m_Action += action;
-        }
-
-        public void Invoke(byte[] data, int offset, int size)
-        {
-            var msg = GameProto.Login.Parser.ParseFrom(data, offset, size);
-            m_Action.Invoke(msg);
-        }
+        public override short GetProtocType() => (Int16)ProtocType.Login;
+        protected override Login ParseData(byte[] data, int offset, int size) => Login.Parser.ParseFrom(data, offset, size);
     }
 
-    public class LoginResListener : Singleton<LoginResListener>, NetManager.IProtocListener
+    public sealed class LoginResListener : NetManager.BaseListener<LoginResListener, GameProto.LoginRes>
     {
-        private Action<GameProto.LoginRes> m_Action;
-
-        public LoginResListener()
-        {
-            NetManager.Register((Int16)ProtocType.LoginRes, this);
-        }
-
-        public void AddListener(Action<GameProto.LoginRes> action)
-        {
-            m_Action += action;
-        }
-
-        public void Invoke(byte[] data, int offset, int size)
-        {
-            var msg = GameProto.LoginRes.Parser.ParseFrom(data, offset, size);
-            m_Action.Invoke(msg);
-        }
+        public override short GetProtocType() => (Int16)ProtocType.LoginRes;
+        protected override LoginRes ParseData(byte[] data, int offset, int size) => LoginRes.Parser.ParseFrom(data, offset, size);
     }
 
     class Program
@@ -65,6 +39,12 @@ namespace SocketClient
 
         static void Main(string[] args)
         {
+            LoginListener.instance.AddListener(delegate (GameProto.Login msg)
+            {
+                Console.WriteLine(String.Format("account = {0}", msg.Account));
+                Console.WriteLine(String.Format("password = {0}", msg.Password));
+            });
+
             LoginResListener.instance.AddListener(delegate (GameProto.LoginRes loginRes)
             {
                 if (loginRes.IsMatch)
@@ -103,13 +83,11 @@ namespace SocketClient
             }
             else if (cmd == "login")
             {
-                GameProto.Login hanson = new GameProto.Login
+                NetManager.Send((Int16)ProtocType.Login, new GameProto.Login
                 {
                     Account = "HansonLost",
                     Password = "321321",
-                };
-
-                NetManager.Send((Int16)ProtocType.Login, hanson);
+                });
             }
             else
             {
