@@ -38,11 +38,11 @@ namespace HamPig.Network
             //m_Listenfd.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true); 先不弄端口复用
         }
 
-        public void Run()
+        public void Bind(String ip, Int32 port)
         {
             Console.WriteLine("Server running...");
-            IPAddress ip = IPAddress.Parse("127.0.0.1");
-            IPEndPoint ipEp = new IPEndPoint(ip, 8888);
+            IPAddress addr = IPAddress.Parse(ip);
+            IPEndPoint ipEp = new IPEndPoint(addr, port);
             m_Listenfd.Bind(ipEp);
             m_Listenfd.Listen(0);   // 不限制待连接数
             m_Listenfd.BeginAccept(AcceptCallback, m_Listenfd);

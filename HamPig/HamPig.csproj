@@ -61,6 +61,7 @@
     <Compile Include="Network\ClientSocket.cs" />
     <Compile Include="Network\LittleEndianByte.cs" />
     <Compile Include="Network\NetManager.cs" />
+    <Compile Include="Network\ServerNetManager.cs" />
     <Compile Include="Network\ServerSocket.cs" />
     <Compile Include="Network\SocketReadBuffer.cs" />
     <Compile Include="Network\SocketWriteBuffer.cs" />

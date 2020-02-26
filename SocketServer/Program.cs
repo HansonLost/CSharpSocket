@@ -11,15 +11,48 @@ namespace SocketServer
 {
     class Program
     {
+        public enum ProtocType : Int16
+        {
+            None,
+            Login,
+            LoginRes,
+        }
+
+        public class LoginListener : Singleton<LoginListener>, ServerNetManager.IProtocListener
+        {
+            private Action<Socket, GameProto.Login> m_Action;
+
+            public LoginListener()
+            {
+                ServerNetManager.Register((Int16)ProtocType.Login, this);
+            }
+
+            public void AddListener(Action<Socket, GameProto.Login> action)
+            {
+                m_Action += action;
+            }
+
+            public void Invoke(Socket cfd, byte[] data, int offset, int size)
+            {
+                var msg = GameProto.Login.Parser.ParseFrom(data, offset, size);
+                m_Action.Invoke(cfd, msg);
+            }
+        }
+
+
         static void Main(string[] args)
         {
-            ServerSocket serverSocket = new ServerSocket();
-            serverSocket.Run();
-            serverSocket.onReceive.AddListener(delegate (Socket cfd, byte[] byteData)
+            LoginListener.instance.AddListener(delegate (Socket cfd, GameProto.Login login)
             {
-                //Console.WriteLine(String.Format("client : {1}", cfd.ToString(), Encoding.Default.GetString(byteData)));
-                serverSocket.Send(cfd, byteData);
+                Console.WriteLine(String.Format("Check Account = {0}", login.Account));
+                ServerNetManager.Send(cfd, (Int16)ProtocType.Login, login);
+                ServerNetManager.Send(cfd, (Int16)ProtocType.LoginRes, new GameProto.LoginRes
+                {
+                    IsMatch = true,
+                });
             });
+
+            ServerNetManager.Bind("127.0.0.1", 8888);
 
             ConsoleAsync console = new ConsoleAsync();
 
@@ -35,7 +68,7 @@ namespace SocketServer
                     }
                 }
 
-                serverSocket.Tick();
+                ServerNetManager.Update();
             }
         }
     }
