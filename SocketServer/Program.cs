@@ -17,7 +17,7 @@ namespace SocketServer
             serverSocket.Run();
             serverSocket.onReceive.AddListener(delegate (Socket cfd, byte[] byteData)
             {
-                Console.WriteLine(String.Format("client : {1}", cfd.ToString(), Encoding.Default.GetString(byteData)));
+                //Console.WriteLine(String.Format("client : {1}", cfd.ToString(), Encoding.Default.GetString(byteData)));
                 serverSocket.Send(cfd, byteData);
             });
 

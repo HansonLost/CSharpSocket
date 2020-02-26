@@ -5,11 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Google.Protobuf;
 
+
 namespace HamPig.Network
 {
+    
     public interface IProtocListener
     {
-        ProtocType GetProtocType();
         void Invoke(byte[] data, int offset, int size);
         /* AddListener 由派生类自行定义 */
     }
@@ -22,7 +23,7 @@ namespace HamPig.Network
     public enum ProtocType : Int16
     {
         None,
-        Person,
+        Login,
     }
 
     // client net
@@ -32,7 +33,7 @@ namespace HamPig.Network
 
         private static ClientSocket m_ClientSocket;
 
-        public static void Connect()
+        public static void Connect(String ip, Int32 port)
         {
             m_ClientSocket = new ClientSocket();
             m_ClientSocket.onReceive.AddListener(delegate (byte[] data)
@@ -46,59 +47,64 @@ namespace HamPig.Network
             m_ClientSocket.Connect("127.0.0.1", 8888);
         }
 
+        public static void Close()
+        {
+            m_ClientSocket.Close();
+        }
+
         public static void Register(ProtocType type, IProtocListener protoc)
         {
             m_ProtocMap.Add(type, protoc);
         }
 
-        public static void Send(IProtocData protoc)
+        public static void Send(ProtocType type, IMessage msg)
         {
-            m_ClientSocket.Send(protoc.ToBytes());
+            var typeBytes = LittleEndianByte.GetBytes((Int16)type);
+            var dataBytes = msg.ToByteArray();
+            var sendBytes = typeBytes.Concat(dataBytes).ToArray();
+            m_ClientSocket.Send(sendBytes);
+        }
+
+        public static void Update()
+        {
+            if (m_ClientSocket != null)
+                m_ClientSocket.Tick();
         }
     }
 
-    public class BaseProtocListener<T> : Singleton<T>, IProtocListener 
-        where T : class, new()
-    {
-        public BaseProtocListener()
-        {
-            ProtocType type = GetProtocType();
-            NetManager.Register(type, this);
-        }
-        public virtual ProtocType GetProtocType() => ProtocType.None;
-        public virtual void Invoke(byte[] data, int offset, int size) { return; }
-    }
+    //public class BaseProtocListener<T> : Singleton<T>, IProtocListener 
+    //    where T : class, new()
+    //{
+    //    public BaseProtocListener()
+    //    {
+    //        ProtocType type = GetProtocType();
+    //        NetManager.Register(type, this);
+    //    }
+    //    public abstract virtual ProtocType GetProtocType();
+    //    public virtual void Invoke(byte[] data, int offset, int size) { return; }
+    //}
 
     /* 外部代码 */
 
-    public class Person : BaseProtocListener<Person>
-    {
-        private Action<String> m_Action;
 
-        public override ProtocType GetProtocType() => ProtocType.Person;
-        public void AddListener(Action<String> action) => m_Action += action;
-        public override void Invoke(byte[] data, int offset, int size)
+    public class LoginListener : Singleton<LoginListener>, IProtocListener
+    {
+        private Action<GameProto.Login> m_Action;
+
+        public LoginListener()
         {
-            byte[] msg = new byte[size];
-            Array.Copy(data, offset, msg, 0, size);
-            String name = Encoding.Default.GetString(msg);
-            m_Action.Invoke(name);
+            NetManager.Register(ProtocType.Login, this);
         }
-    }
 
-    public class PersonData
-    {
-        public string name;
-    }
-
-    public class Run
-    {
-        public void Main()
+        public void AddListener(Action<GameProto.Login> action)
         {
-            Person.instance.AddListener(delegate (String name)
-            {
-                Console.WriteLine(name);
-            });
+            m_Action += action;
+        }
+
+        public void Invoke(byte[] data, int offset, int size)
+        {
+            var msg = GameProto.Login.Parser.ParseFrom(data, offset, size);
+            m_Action.Invoke(msg);
         }
     }
 }

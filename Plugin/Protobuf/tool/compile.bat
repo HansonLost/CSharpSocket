@@ -2,7 +2,7 @@
 
 set COMPILER=%cd%\protoc
 set SRC=.\Source
-set DST=.\cs
+set DST=E:\Work\VisualStudioProject\SocketFrame\HamPig\Protobuf
 
 del /f /s /q %DST%
 for %%i in (%SRC%\*.proto) do (
