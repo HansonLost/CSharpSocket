@@ -19,8 +19,6 @@ namespace SocketClient
         LoginRes,
     }
 
-    
-
     public sealed class LoginListener : NetManager.BaseListener<LoginListener, GameProto.Login>
     {
         public override short GetProtocType() => (Int16)ProtocType.Login;

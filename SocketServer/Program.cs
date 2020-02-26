@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net.Sockets;
 using HamPig;
 using HamPig.Network;
+using GameProto;
 
 namespace SocketServer
 {
@@ -18,25 +19,10 @@ namespace SocketServer
             LoginRes,
         }
 
-        public class LoginListener : Singleton<LoginListener>, ServerNetManager.IProtocListener
+        public class LoginListener : ServerNetManager.BaseListener<LoginListener, GameProto.Login>
         {
-            private Action<Socket, GameProto.Login> m_Action;
-
-            public LoginListener()
-            {
-                ServerNetManager.Register((Int16)ProtocType.Login, this);
-            }
-
-            public void AddListener(Action<Socket, GameProto.Login> action)
-            {
-                m_Action += action;
-            }
-
-            public void Invoke(Socket cfd, byte[] data, int offset, int size)
-            {
-                var msg = GameProto.Login.Parser.ParseFrom(data, offset, size);
-                m_Action.Invoke(cfd, msg);
-            }
+            public override short GetProtocType() => (Int16)ProtocType.Login;
+            protected override Login ParseData(byte[] data, int offset, int size) => Login.Parser.ParseFrom(data, offset, size);
         }
 
 

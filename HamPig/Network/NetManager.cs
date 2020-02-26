@@ -23,8 +23,7 @@ namespace HamPig.Network
 
             public BaseListener()
             {
-                Int16 key = GetProtocType();
-                NetManager.Register(key, this);
+                NetManager.Register(GetProtocType(), this);
             }
             public abstract Int16 GetProtocType();
             protected abstract P ParseData(byte[] data, int offset, int size);

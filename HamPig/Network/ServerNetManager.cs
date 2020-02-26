@@ -15,6 +15,28 @@ namespace HamPig.Network
             void Invoke(Socket cfd, byte[] data, int offset, int size);
         }
 
+        public abstract class BaseListener<T, P> : Singleton<T>, IProtocListener
+            where T : class, new()
+            where P : IMessage
+        {
+            private Action<Socket, P> m_Action;
+            public BaseListener()
+            {
+                Register(GetProtocType(), this);
+            }
+            public abstract Int16 GetProtocType();
+            protected abstract P ParseData(byte[] data, int offset, int size);
+            public void AddListener(Action<Socket, P> action)
+            {
+                m_Action += action;
+            }
+
+            public void Invoke(Socket cfd, byte[] data, int offset, int size)
+            {
+                m_Action.Invoke(cfd, ParseData(data, offset, size));
+            }
+        }
+
         private static ServerSocket m_ServerSocket;
         private static Dictionary<Int16, IProtocListener> m_ProtocMap = new Dictionary<Int16, IProtocListener>();
         public static void Register(Int16 id, IProtocListener protoc)
